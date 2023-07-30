@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修复大小写</title>
+</head>
+<body>
+<input type="file" webkitdirectory id="f"><button hidden onclick="k1()">下载</button><br><hr>
+<pre id="pre"></pre>
+</body>
+<script>
+var base = "";
+var files = [];
+var str = "";
+function get(e){
+    var a = document.createElement('a');
+    a.href = e;
+    return a.href
+}
+f.oninput = function(){
+    if(f.value){
+        files = f.files;
+        getBase();
+        for(var i = 0;i < files.length;i++){
+            files[i].path = files[i].webkitRelativePath.slice(base.length);
+        }
+        document.querySelectorAll('button').forEach(function(e){
+            e.hidden = ''
+        })
+        strs = ""
+        for(var i = 1 ; i < files.length;i++){
+            str+=files[i].path + "\n";
+        }
+        str+=files[0].path;
+        str = "(function () {\n\tif (typeof process === 'object') return;\n\tif (typeof Proxy === 'function') {\n\t\twindow.require = new Proxy(function () {}, {\n\t\t\tget: function () { return require; },\n\t\t\tset: function () { return require; },\n\t\t\tapply: function () { return require },\n\t\t\tconstruct: function () { return require },\n\t\t\thas: function () { return !!1 }\n\t\t});\n\t}\n\tvar a = document.createElement('a');\n\tfunction getURL(e) {\n\t\ta.href = e;\n\t\treturn a.href\n\t}\n\tvar base = getURL(\".\");\n\tvar replaceObj = {};\n\t".concat(JSON.stringify(str), ".split(\"\n\").forEach(function (v) {\n\t\treplaceObj[getURL(v).toLowerCase()] = v;\n\t});\n\tfunction replaceName(t) {\n\t\tvar r = getURL(t || \"\").toLowerCase();\n\t\treturn replaceObj[r] ? replaceObj[r] : t;\n\t}\n\tvar __appendChild = document.body.appendChild;\n\tdocument.body.appendChild = function (e) {\n\t\tif (e && e.nodeName == 'SCRIPT') {\n\t\t\te.src = replaceName(e.src);\n\t\t}\n\t\t__appendChild.call(this, e)\n\t}\n\tvar __open = XMLHttpRequest.prototype.open\n\tXMLHttpRequest.prototype.open = function (method, url, async) {\n\t\tvar url = replaceName(url);\n\t\treturn async == false ? __open.call(this, method, url, async) : __open.call(this, method, url);\n\t}\n\tObject.defineProperties(Image.prototype, {\n\t\tsrc: {\n\t\t\tget: function () {\n\t\t\t\treturn this.getAttribute('src')\n\t\t\t},\n\t\t\tset: function (a) {\n\t\t\t\tthis.setAttribute('src', replaceName(a));\n\t\t\t}\n\t\t}\n\t})\n\tObject.defineProperties(Audio.prototype, {\n\t\tsrc: {\n\t\t\tget: function () {\n\t\t\t\treturn this.getAttribute('src')\n\t\t\t},\n\t\t\tset: function (a) {\n\t\t\t\tthis.setAttribute('src', replaceName(a));\n\t\t\t}\n\t\t}\n\t})\n})()");
+        pre.innerText = str
+    }else{
+        document.querySelectorAll('button').forEach(function(e){
+            e.hidden = 'hidden'
+        })
+    }
+}
+function download(e){
+    var a = document.createElement('a');
+    var blob = new Blob([e]);
+    var url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = "file.js";
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+function getBase(){
+    for(var i = 0 ; i < files.length;i++){
+        file = files[i];
+        if(file.name == 'index.html'){
+            base = file.webkitRelativePath.slice(0,-10);
+            return;
+        }
+    }
+}
+function k1(){
+    download(str);
+}
+</script>
+</html>
